@@ -1,0 +1,4 @@
+name: es8311
+version: "1.0.0"
+dependencies:
+  - i2s_audio
