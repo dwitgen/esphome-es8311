@@ -11,6 +11,7 @@ namespace es8311 {
 
 static const char *const TAG = "es8311";
 
+// Added for custom volume not sure custom volume was needed
 static constexpr float MIN_DB = -50.0f;   // quiet floor (adjust -50 to -80)
 static constexpr float MAX_DB = 0.0f;     // unity gain at 1.0
 static constexpr float CURVE_EXPONENT = 1.0f;  // 2.0 = quadratic, 3.0 = cubic, 4.0 = steeper
@@ -75,17 +76,8 @@ void ES8311::dump_config() {
 bool ES8311::set_volume(float volume) {
   volume = esphome::clamp(volume, 0.0f, 1.0f);
 
-  // Option A: Power-law curve (simplest, recommended starting point)
+  // Power-law curve 
   float curved = std::pow(volume, CURVE_EXPONENT);
-
-  // Option B: Explicit dB mapping (more precise control over quiet end)
-  // float curved;
-  // if (volume <= 0.001f) {
-  //   curved = 0.0f;
-  // } else {
-  //   float db = MIN_DB + (MAX_DB - MIN_DB) * volume;
-  //   curved = std::pow(10.0f, db / 20.0f);
-  // }
 
   // Now map the curved (0.0–1.0) value linearly to register 0–255
   uint8_t reg32 = esphome::remap<uint8_t, float>(curved, 0.0f, 1.0f, 0, 255);
@@ -106,14 +98,9 @@ float ES8311::volume() {
   // For power-law:
   float perceptual = std::pow(linear_reg, 1.0f / CURVE_EXPONENT);
 
-  // For dB version (if using Option B above):
-  // float db = 20.0f * std::log10(linear_reg + 1e-10f);  // avoid log(0)
-  // perceptual = (db - MIN_DB) / (MAX_DB - MIN_DB);
-  // perceptual = esphome::clamp(perceptual, 0.0f, 1.0f);
-
   return perceptual;
 }
-
+// Original volume code
 // bool ES8311::set_volume(float volume) {
 //  volume = clamp(volume, 0.0f, 1.0f);
 //  uint8_t reg32 = remap<uint8_t, float>(volume, 0.0f, 1.0f, 0, 255);
